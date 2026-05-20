@@ -3,20 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>免佣百家乐/幸运六测试版</title>
-  <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.min.js"></script>
+  <title>免佣百家乐/幸运六正式版</title>
+  
+  <script src="https://cdn.staticfile.org/vue/3.3.4/vue.global.min.js"></script>
   
   <style>
+    /* 【防乱码黑科技】：在 Vue 引擎加载完毕前，隐藏所有带 {{}} 的元素，保持界面整洁 */
+    [v-cloak] { display: none !important; }
+
     :root { --rpx: 0.1333vw; }
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* 【终极全屏锁死】彻底禁止浏览器整体上下滑动与溢出，保证 100% 一屏尽显 */
     html, body { 
       background-color: #0b1c14; font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
       height: 100%; width: 100%; overflow: hidden; position: fixed; top: 0; left: 0; 
     }
 
-    /* 绝对定位满屏，移除微信安全顶距，换为自然的 H5 沉浸边距 */
     .table-container { 
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background: radial-gradient(circle, #2E8B57 0%, #0B3B17 100%);
@@ -66,7 +68,7 @@
     @keyframes dropIn { 0% { transform: translateY(-2vh); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
     @keyframes dropInRotated { 0% { transform: translateY(-2vh) rotate(90deg); opacity: 0; } 100% { transform: translateY(0) rotate(90deg); opacity: 1; } }
 
-    /* 路单面板区 - 严格固定单元格高度，只提供横向滚动 */
+    /* 路单面板区 */
     .macau-roads-panel-clean {
       flex-shrink: 0; margin: 1vh 2vw 0; background-color: #ffffff; border: 1px solid #FFD700; border-radius: 1.6vw; padding: 1vw; color: #333; overflow: hidden;
     }
@@ -76,7 +78,6 @@
     .road-title-strip { font-size: 2.4vw; font-weight: bold; color: #777; padding-left: 1vw; margin-top: 0.2vh; }
     .road-title-strip-gold { font-size: 2.4vw; font-weight: bold; color: #b8860b; padding-left: 1vw; margin-top: 0.6vh; border-top: 1px dashed #ccc; padding-top: 0.4vh; }
 
-    /* 每一单元格定死 26px，6行=156px，保证路单完美不乱套 */
     .bead-row-container { display: flex; flex-direction: row; background: #fff; border-top: 1px solid #e0e0e0; border-left: 1px solid #e0e0e0; height: 156px; }
     .bead-column-unit { display: flex; flex-direction: column; width: 26px; height: 156px; }
     .bead-cell-unit { width: 26px; height: 26px; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: center; align-items: center; box-sizing: border-box; }
@@ -192,7 +193,7 @@
 </head>
 <body>
 
-<div id="app" class="table-container">
+<div id="app" class="table-container" v-cloak>
   
   <div class="top-bar">
     <div class="balance-area">
@@ -356,7 +357,6 @@
 </div>
 
 <script>
-// ==================== 澳门正统 8 靴牌洗牌及算路引擎 ====================
 const gameUtils = {
   createDeck() {
     const suits = ['♠', '♥', '♣', '♦'];
@@ -387,57 +387,9 @@ const gameUtils = {
   }
 };
 
-// ==================== Vue 控制中心 ====================
 const { createApp } = Vue;
 
 createApp({
   data() {
     return {
-      balance: 10000,
-      totalBet: 0,
-      chips: [20, 100, 500, 1000, 5000],
-      selectedChip: 100,
-      gameMode: 'standard', 
-      customChipValue: 0, 
-      showControl: false, 
-      lastTapTime: 0,     
-      bets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 },
-      lastBets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 }, 
-      gameCount: 1, 
-      rawHistory: [],        
-      displayBeadPlate: [],  
-      displayBigRoad: [],    
-      roadTrendTip: "大路积攒中，智能AI正在全盘监控长庄长闲、单跳、两室一厅热门路子...", 
-      l6EffectActive: false,
-      l6EffectText: "",
-      stats: { banker: 0, player: 0, tie: 0 },
-      shoe: [],
-      playerCards: [], bankerCards: [],
-      playerPoint: 0, bankerPoint: 0,
-      isDealing: false,
-      needResetShoeNextTurn: false,
-      clickTimer: null
-    }
-  },
-  mounted() {
-    this.resetAllRoadMatrix();
-    this.createShoe();
-  },
-  methods: {
-    showToast(msg) {
-      const toast = document.createElement('div');
-      toast.textContent = msg;
-      toast.style.cssText = 'position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#fff;padding:2.5vw 4.5vw;border-radius:1.5vw;font-size:3.5vw;z-index:9999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 0.5vw 2vw rgba(0,0,0,0.5);font-weight:bold;';
-      document.body.appendChild(toast);
-      setTimeout(() => { toast.style.opacity = '0'; }, 1500);
-      setTimeout(() => { document.body.removeChild(toast); }, 1800);
-    },
-    switchMode(targetMode) {
-      if (this.isDealing) return;
-      if (this.totalBet > 0) {
-        this.showToast('请先清空当前下注再更换模式');
-        return;
-      }
-      this.gameMode = targetMode;
-      this.vibrate('light');
-      this.showToast(targetMode === 'standard' ? '已切至：标准抽佣模式' : '已切至
+      balance: 10000
