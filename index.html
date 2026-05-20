@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>免佣百家乐/幸运六正式版</title>
   
-  <script src="https://cdn.staticfile.org/vue/3.3.4/vue.global.min.js"></script>
+  <script src="https://registry.npmmirror.com/vue/3.3.4/files/dist/vue.global.prod.js"></script>
   
   <style>
-    /* 【防乱码黑科技】：在 Vue 引擎加载完毕前，隐藏所有带 {{}} 的元素，保持界面整洁 */
+    /* 防乱码黑科技 */
     [v-cloak] { display: none !important; }
 
     :root { --rpx: 0.1333vw; }
@@ -392,4 +392,435 @@ const { createApp } = Vue;
 createApp({
   data() {
     return {
-      balance: 10000
+      balance: 10000,
+      totalBet: 0,
+      chips: [20, 100, 500, 1000, 5000],
+      selectedChip: 100,
+      gameMode: 'standard', 
+      customChipValue: 0, 
+      showControl: false, 
+      lastTapTime: 0,     
+      bets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 },
+      lastBets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 }, 
+      gameCount: 1, 
+      rawHistory: [],        
+      displayBeadPlate: [],  
+      displayBigRoad: [],    
+      roadTrendTip: "大路积攒中，智能AI正在全盘监控长庄长闲、单跳、两室一厅热门路子...", 
+      l6EffectActive: false,
+      l6EffectText: "",
+      stats: { banker: 0, player: 0, tie: 0 },
+      shoe: [],
+      playerCards: [], bankerCards: [],
+      playerPoint: 0, bankerPoint: 0,
+      isDealing: false,
+      needResetShoeNextTurn: false,
+      clickTimer: null
+    }
+  },
+  mounted() {
+    this.resetAllRoadMatrix();
+    this.createShoe();
+  },
+  methods: {
+    showToast(msg) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = 'position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#fff;padding:2.5vw 4.5vw;border-radius:1.5vw;font-size:3.5vw;z-index:9999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 0.5vw 2vw rgba(0,0,0,0.5);font-weight:bold;';
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+      setTimeout(() => { document.body.removeChild(toast); }, 1800);
+    },
+    switchMode(targetMode) {
+      if (this.isDealing) return;
+      if (this.totalBet > 0) {
+        this.showToast('请先清空当前下注再更换模式');
+        return;
+      }
+      this.gameMode = targetMode;
+      this.vibrate('light');
+      this.showToast(targetMode === 'standard' ? '已切至：标准抽佣模式' : '已切至：免佣幸运六模式');
+    },
+    resetAllRoadMatrix() {
+      let beadMatrix = [];
+      for(let c=0; c<15; c++) {
+        let col = [];
+        for(let r=0; r<6; r++) col.push('empty');
+        beadMatrix.push(col);
+      }
+      let bigMatrix = [];
+      for (let c = 0; c < 30; c++) {
+        let col = [];
+        for (let r = 0; r < 6; r++) col.push({ winner: 'empty', hasTie: false });
+        bigMatrix.push(col);
+      }
+      this.displayBeadPlate = beadMatrix;
+      this.displayBigRoad = bigMatrix;
+      this.$nextTick(() => { if(this.$refs.roadsScroll) this.$refs.roadsScroll.scrollLeft = 0; });
+    },
+    createShoe() {
+      let newShoe = gameUtils.createDeck();
+      this.shoe = gameUtils.shuffle(newShoe);
+    },
+    adjustCustomChip(addVal) {
+      if (this.isDealing) return;
+      this.customChipValue += addVal;
+      this.vibrate('light');
+    },
+    resetCustomChip() {
+      if (this.isDealing) return;
+      this.customChipValue = 0;
+      this.vibrate('light');
+    },
+    selectChip(val) {
+      this.selectedChip = val;
+      this.showControl = false;
+      this.vibrate('light');
+    },
+    selectCustomChip() {
+      if (this.isDealing) return;
+      let curTime = new Date().getTime();
+      let gap = curTime - this.lastTapTime;
+      this.lastTapTime = curTime;
+      this.selectedChip = 'custom';
+
+      if (gap < 300) {
+        clearTimeout(this.clickTimer);
+        this.showControl = !this.showControl;
+        this.vibrate('medium');
+      } else {
+        this.clickTimer = setTimeout(() => {
+          if (this.customChipValue <= 0) {
+            this.showToast('请【快速双击】设置自由筹码面额');
+          }
+        }, 300);
+      }
+    },
+    placeBet(zone) {
+      if (this.isDealing) return;
+      let chip = this.selectedChip === 'custom' ? this.customChipValue : this.selectedChip;
+      if (this.selectedChip === 'custom' && chip <= 0) {
+        this.showToast('请先双击筹码配置自定义面额');
+        return;
+      }
+      if (this.balance < chip) { this.showToast('余额不足'); return; }
+      
+      this.bets[zone] += chip;
+      this.balance -= chip;
+      this.totalBet += chip;
+      this.vibrate('light');
+    },
+    clearBets() {
+      if (this.isDealing) return;
+      this.balance += this.totalBet;
+      this.totalBet = 0;
+      this.bets = { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 };
+      this.vibrate('light');
+    },
+    repeatBets() {
+      if (this.isDealing) return;
+      const last = this.lastBets;
+      let reqTotal = last.banker + last.tie + last.player;
+      if (this.gameMode === 'free') {
+        reqTotal += (last.lucky6_any + last.lucky6_2cards + last.lucky6_3cards);
+      }
+      if (reqTotal === 0) { this.showToast('无上局下注记录'); return; }
+      
+      let currentBalance = this.balance + this.totalBet;
+      if (currentBalance < reqTotal) { this.showToast('余额不足'); return; }
+      
+      this.clearBets();
+      let nextBets = { ...last };
+      if (this.gameMode === 'standard') {
+        nextBets.lucky6_any = 0; nextBets.lucky6_2cards = 0; nextBets.lucky6_3cards = 0;
+      }
+      this.bets = nextBets;
+      this.balance = currentBalance - reqTotal;
+      this.totalBet = reqTotal;
+      this.vibrate('light');
+    },
+    doubleBets() {
+      if (this.isDealing) return;
+      let targetBets = this.totalBet === 0 ? { ...this.lastBets } : { ...this.bets };
+      if (this.gameMode === 'standard') {
+        targetBets.lucky6_any = 0; targetBets.lucky6_2cards = 0; targetBets.lucky6_3cards = 0;
+      }
+      let reqAmt = targetBets.banker + targetBets.tie + targetBets.player + targetBets.lucky6_any + targetBets.lucky6_2cards + targetBets.lucky6_3cards;
+      if (reqAmt === 0) { this.showToast('桌面无有效筹码'); return; }
+      
+      let currentBalance = this.balance + this.totalBet;
+      if (currentBalance < reqAmt * 2) { this.showToast('余额不足，无法执行加倍'); return; }
+      
+      this.bets = { 
+        banker: targetBets.banker * 2, tie: targetBets.tie * 2, player: targetBets.player * 2,
+        lucky6_any: targetBets.lucky6_any * 2, lucky6_2cards: targetBets.lucky6_2cards * 2, lucky6_3cards: targetBets.lucky6_3cards * 2
+      };
+      this.balance = currentBalance - (reqAmt * 2);
+      this.totalBet = reqAmt * 2;
+      this.vibrate('light');
+    },
+    dealCards() {
+      if (this.isDealing) return;
+      if (this.totalBet === 0) { this.showToast('请先选择对应区域下注'); return; }
+      
+      if (this.needResetShoeNextTurn) {
+        this.createShoe();
+        this.resetAllRoadMatrix();
+        this.rawHistory = [];
+        this.gameCount = 1;
+        this.stats = { banker: 0, player: 0, tie: 0 };
+        this.needResetShoeNextTurn = false;
+        this.l6EffectActive = false;
+        this.roadTrendTip = "新牌靴重开，智能大奖情报监控开启！";
+        this.showToast('全新牌靴！重新写路');
+      }
+
+      this.lastBets = { ...this.bets };
+      this.showControl = false;
+      this.isDealing = true; 
+      
+      let currentShoe = this.shoe;
+      let pCards = [currentShoe.pop(), currentShoe.pop()];
+      let bCards = [currentShoe.pop(), currentShoe.pop()];
+      let pPoint = gameUtils.getPoint(pCards);
+      let bPoint = gameUtils.getPoint(bCards);
+
+      if (pPoint < 8 && bPoint < 8) {
+        if (pPoint <= 5) pCards.push(currentShoe.pop());
+        pPoint = gameUtils.getPoint(pCards);
+        let bankerDraw = false;
+        if (pCards.length === 2) {
+          if (bPoint <= 5) bankerDraw = true;
+        } else {
+          let p3v = pCards[2].value;
+          if (bPoint <= 2) bankerDraw = true;
+          else if (bPoint === 3 && p3v !== 8) bankerDraw = true;
+          else if (bPoint === 4 && p3v >= 2 && p3v <= 7) bankerDraw = true;
+          else if (bPoint === 5 && p3v >= 4 && p3v <= 7) bankerDraw = true;
+          else if (bPoint === 6 && (p3v === 6 || p3v === 7)) bankerDraw = true;
+        }
+        if (bankerDraw) bCards.push(currentShoe.pop());
+        bPoint = gameUtils.getPoint(bCards);
+      }
+
+      let sequence = [
+        { side: 'player', card: pCards[0] }, { side: 'banker', card: bCards[0] },
+        { side: 'player', card: pCards[1] }, { side: 'banker', card: bCards[1] }
+      ];
+      if (pCards[2]) sequence.push({ side: 'player', card: pCards[2] });
+      if (bCards[2]) sequence.push({ side: 'banker', card: bCards[2] });
+
+      this.shoe = currentShoe;
+      this.playerCards = []; this.bankerCards = [];
+      this.playerPoint = 0; this.bankerPoint = 0;
+
+      let step = 0; let currentPCards = []; let currentBCards = [];
+      const dealNext = () => {
+        if (step >= sequence.length) {
+          this.processSettleQueue(pPoint, bPoint, pCards.length, bCards.length);
+          return;
+        }
+        let action = sequence[step];
+        if (action.side === 'player') {
+          currentPCards.push(action.card); this.playerCards = [...currentPCards]; this.playerPoint = gameUtils.getPoint(currentPCards);
+        } else {
+          currentBCards.push(action.card); this.bankerCards = [...currentBCards]; this.bankerPoint = gameUtils.getPoint(currentBCards);
+        }
+        this.vibrate('light'); step++; setTimeout(dealNext, 600);
+      };
+      dealNext();
+    },
+    generatePureMacauRoads(historyArray) {
+      let beadMatrix = []; let bCol = [];
+      for(let i=0; i<historyArray.length; i++) {
+        bCol.push(historyArray[i]);
+        if(bCol.length === 6) { beadMatrix.push(bCol); bCol = []; }
+      }
+      if(bCol.length > 0) { while(bCol.length < 6) bCol.push('empty'); beadMatrix.push(bCol); }
+      while(beadMatrix.length < 15) { beadMatrix.push(['empty','empty','empty','empty','empty','empty']); }
+
+      let bigMatrix = [];
+      const createCol = () => {
+        let col = [];
+        for(let i=0; i<6; i++) col.push({ winner: 'empty', hasTie: false });
+        return col;
+      };
+      bigMatrix.push(createCol());
+      let currentC = 0; let currentR = 0; let lastWin = null;
+      let streakStartCol = 0;
+
+      for (let i = 0; i < historyArray.length; i++) {
+        let res = historyArray[i];
+        if (res === 'tie') {
+          if (lastWin === null) bigMatrix[currentC][currentR] = { winner: 'tie', hasTie: true };
+          else bigMatrix[currentC][currentR].hasTie = true;
+          continue;
+        }
+        if (lastWin === null) { bigMatrix[currentC][currentR].winner = res; lastWin = res; streakStartCol = currentC; continue; }
+        if (res === lastWin) {
+          if (currentR + 1 < 6 && bigMatrix[currentC][currentR + 1].winner === 'empty') {
+            currentR++; 
+          } else {
+            currentC++; while(currentC >= bigMatrix.length) bigMatrix.push(createCol());
+          }
+          bigMatrix[currentC][currentR].winner = res;
+        } else {
+          currentC = streakStartCol + 1; currentR = 0;
+          while(currentC >= bigMatrix.length) bigMatrix.push(createCol());
+          while (bigMatrix[currentC][currentR].winner !== 'empty') {
+            currentC++; if (currentC >= bigMatrix.length) bigMatrix.push(createCol());
+          }
+          bigMatrix[currentC][currentR].winner = res; lastWin = res; streakStartCol = currentC;
+        }
+      }
+      while(bigMatrix.length < 30) bigMatrix.push(createCol());
+      return { bead: beadMatrix, big: bigMatrix };
+    },
+    analyzeRoadTrends(historyWithoutTies) {
+      let len = historyWithoutTies.length;
+      if (len < 3) return "热门盘口路单蓄势中，AI监测器已开启...";
+
+      let last = historyWithoutTies[len - 1];
+      let dragonCount = 0;
+      for(let i = len - 1; i >= 0; i--) {
+        if(historyWithoutTies[i] === last) dragonCount++;
+        else break;
+      }
+      if (dragonCount >= 4) {
+        return `【名路提示：长${last === 'banker' ? '庄' : '闲'}】🔥 监测到长${last === 'banker' ? '庄' : '闲'}长龙正连开 ${dragonCount} 局！建议顺龙而行！`;
+      }
+
+      let jumpCount = 1;
+      for (let i = len - 1; i > 0; i--) {
+        if (historyWithoutTies[i] !== historyWithoutTies[i-1]) jumpCount++;
+        else break;
+      }
+      if (jumpCount >= 4) {
+        return `【名路提示：单跳路】🕺 极热单跳！庄闲正呈现 ${jumpCount} 手交替大路，切勿轻易斩龙！`;
+      }
+
+      if (len >= 6) {
+        let h = historyWithoutTies;
+        if (h[len-6]===h[len-5] && h[len-5]!==h[len-4] && h[len-4]===h[len-3] && h[len-3]===h[len-2] && h[len-2]!==h[len-1]) {
+          return `【名路提示：两室一厅】🏠 经典‘${h[len-6]==='banker'?'庄庄闲':'闲闲庄'}’两室一厅成型！推荐：${h[len-6]==='banker'?'庄':'闲'}！`;
+        }
+      }
+      return `【名路提示】当前盘口大数据分布平稳，看路客请稳步下注。`;
+    },
+    processSettleQueue(pPoint, bPoint, pCardCount, bCardCount) {
+      let bets = this.bets;
+      let resultMsg = "";
+      let currentWinner = "";
+      
+      let playerWin = 0; let bankerWin = 0; let tieWin = 0; let lucky6Win = 0;
+      let triggeredL6 = false; let effectTextStr = "";
+
+      if (pPoint > bPoint) {
+        resultMsg = "闲赢"; currentWinner = "player"; playerWin = bets.player * 2;
+      } else if (bPoint > pPoint) {
+        resultMsg = "庄赢"; currentWinner = "banker";
+        
+        if (this.gameMode === 'standard') {
+          bankerWin = bets.banker * 1.95;
+        } else {
+          if (bPoint === 6) {
+            resultMsg = "庄赢 (6点免佣减半)";
+            bankerWin = bets.banker * 1.5;
+
+            let pureL6Profit = 0;
+            if (bCardCount === 2) {
+              pureL6Profit = (bets.lucky6_any * 12) + (bets.lucky6_2cards * 22);
+              lucky6Win = (bets.lucky6_any * 13) + (bets.lucky6_2cards * 23); 
+            } else if (bCardCount === 3) {
+              pureL6Profit = (bets.lucky6_any * 20) + (bets.lucky6_3cards * 50);
+              lucky6Win = (bets.lucky6_any * 21) + (bets.lucky6_3cards * 51);
+            }
+
+            if (pureL6Profit > 0) {
+              triggeredL6 = true;
+              effectTextStr = `🎉🔥 中幸运6！斩获 ${bCardCount === 2 ? '12/22' : '20/50'} 倍奖金 ¥${pureL6Profit}！！！ 🔥🎉`;
+            }
+          } else {
+            bankerWin = bets.banker * 2;
+          }
+        }
+      } else {
+        resultMsg = "和局"; currentWinner = "tie";
+        tieWin = bets.tie * 9; playerWin = bets.player; bankerWin = bets.banker; 
+      }
+
+      let totalTurnover = playerWin + bankerWin + tieWin + lucky6Win;
+      let isShoeEnd = this.shoe.length < 6;
+
+      let detailContent = `闲盘口赢取: ¥${playerWin.toFixed(2)}\n庄盘口赢取: ¥${bankerWin.toFixed(2)}\n和盘口赢取: ¥${tieWin.toFixed(2)}`;
+      if (this.gameMode === 'free') {
+        detailContent += `\n幸运六赢取: ¥${lucky6Win.toFixed(2)}`;
+      }
+
+      let newHistory = [...this.rawHistory, currentWinner];
+      let roadsData = this.generatePureMacauRoads(newHistory);
+      this.stats[currentWinner] += 1;
+
+      let historyWithoutTies = newHistory.filter(item => item !== 'tie');
+      let nextTrendTip = this.analyzeRoadTrends(historyWithoutTies);
+
+      let lastValidColIndex = 0;
+      for (let c = roadsData.big.length - 1; c >= 0; c--) {
+        if (roadsData.big[c][0].winner !== 'empty') { lastValidColIndex = c; break; }
+      }
+      let targetScroll = lastValidColIndex >= 14 ? (lastValidColIndex - 13) * 26 : 0;
+
+      if (triggeredL6) {
+        this.l6EffectActive = true; this.l6EffectText = effectTextStr;
+        this.vibrate('long');
+        setTimeout(() => {
+          this.triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll);
+        }, 2500);
+      } else {
+        this.triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll);
+      }
+    },
+    triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll) {
+      setTimeout(() => {
+        alert(`【开牌结果：${resultMsg}】\n[ 闲 ${this.playerPoint} 点 vs 庄 ${this.bankerPoint} 点 ]\n\n${detailContent}` + (isShoeEnd ? "\n\n⚠️ 本靴结束，下局将重新洗牌" : ""));
+        
+        this.balance = parseFloat((this.balance + totalTurnover).toFixed(2));
+        this.totalBet = 0;
+        this.bets = { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 };
+        this.playerCards = []; this.bankerCards = [];
+        this.rawHistory = newHistory;
+        this.displayBeadPlate = roadsData.bead;
+        this.displayBigRoad = roadsData.big;
+        this.gameCount += 1;
+        this.roadTrendTip = nextTrendTip;
+        this.needResetShoeNextTurn = isShoeEnd;
+        this.l6EffectActive = false; 
+        this.isDealing = false;
+        
+        this.$nextTick(() => {
+          if(this.$refs.roadsScroll) this.$refs.roadsScroll.scrollLeft = targetScroll;
+        });
+      }, 300);
+    },
+    recharge() {
+      if (this.isDealing) return;
+      const res = prompt("选择或手动输入充值金额 (如: 5000, 10000, 100000):", "10000");
+      let amt = parseInt(res);
+      if (!isNaN(amt) && amt > 0) {
+        this.balance += amt;
+        this.showToast(`成功充值 ¥${amt}`);
+        this.vibrate('light');
+      } else if (res !== null) {
+        this.showToast("金额无效");
+      }
+    },
+    vibrate(type) {
+      if (navigator.vibrate) {
+        navigator.vibrate(type === 'long' ? 200 : (type === 'medium' ? 30 : 15));
+      }
+    }
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
