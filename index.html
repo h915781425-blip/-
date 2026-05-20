@@ -8,9 +8,7 @@
   <script src="https://registry.npmmirror.com/vue/3.3.4/files/dist/vue.global.prod.js"></script>
   
   <style>
-    /* 防乱码黑科技 */
     [v-cloak] { display: none !important; }
-
     :root { --rpx: 0.1333vw; }
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
@@ -23,212 +21,158 @@
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background: radial-gradient(circle, #2E8B57 0%, #0B3B17 100%);
       display: flex; flex-direction: column; color: white; overflow: hidden;
-      padding-top: max(1.5vh, env(safe-area-inset-top, 10px));
+      padding-top: max(1vh, env(safe-area-inset-top, 10px));
     }
 
     /* 顶部栏 */
-    .top-bar {
-      flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
-      padding: 1.2vh 4vw; font-size: 3.7vw; font-weight: bold; color: #FFD700;
-      background-color: rgba(0, 0, 0, 0.4);
-    }
+    .top-bar { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 1vh 4vw; font-size: 3.5vw; font-weight: bold; color: #FFD700; background-color: rgba(0, 0, 0, 0.4); }
     .balance-area { display: flex; align-items: center; }
-    .game-counter { background: rgba(255,255,255,0.2); padding: 0.2vh 1.8vw; border-radius: 0.8vw; font-size: 3.2vw; color: #fff; }
+    .game-counter { background: rgba(255,255,255,0.2); padding: 0.2vh 1.8vw; border-radius: 0.8vw; font-size: 3vw; color: #fff; }
     .recharge-btn { background-color: #FFD700; color: #000; font-size: 2.8vw; padding: 0.4vh 1.8vw; border-radius: 0.8vw; margin-left: 1.5vw; border: none; font-weight: bold; cursor: pointer; }
 
     /* 模式切换 */
-    .mode-switcher-bar { flex-shrink: 0; display: flex; background-color: rgba(0,0,0,0.6); padding: 0.8vh 2.6vw; }
-    .mode-tab { flex: 1; text-align: center; font-size: 3vw; font-weight: bold; padding: 1vh 0; color: #aaa; background-color: #222; border: 1px solid #444; cursor: pointer; }
+    .mode-switcher-bar { flex-shrink: 0; display: flex; background-color: rgba(0,0,0,0.6); padding: 0.5vh 2.6vw; }
+    .mode-tab { flex: 1; text-align: center; font-size: 3vw; font-weight: bold; padding: 0.8vh 0; color: #aaa; background-color: #222; border: 1px solid #444; cursor: pointer; }
     .border-left-round { border-radius: 1.3vw 0 0 1.3vw; }
     .border-right-round { border-radius: 0 1.3vw 1.3vw 0; }
     .tab-active-std { background-color: #B22222; color: #fff; border-color: #FF6347; }
     .tab-active-free { background-color: #FFD700; color: #000; border-color: #FFD700; font-weight: 900; }
 
-      /* 牌桌区：增加 flex-grow 权重，并设置最小高度 */
+    /* 【核心修改 1：发牌区最大化】 */
     .card-display-area {
-  flex: 2.2;   /* 原来是1 → 现在变大 */
-  min-height: 18vh; /* 保底高度 */
-  margin: 1vh 2vw 0;
-  padding: 1vh 2vw;
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 1px solid #FFD700;
-  border-radius: 1.6vw;
-  align-items: center;
-}
+      flex: 1 1 auto; /* 自动吸收所有剩余空间 */
+      min-height: 20vh; /* 保证最小高度 */
+      display: flex; justify-content: space-between;
+      margin: 1vh 2vw; padding: 1.5vh 2vw; background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid #FFD700; border-radius: 1.6vw; align-items: center;
+    }
+    .cards-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .side-title { font-size: 3.2vw; font-weight: bold; margin-bottom: 1vh; white-space: nowrap; }
+    .player-color { color: #87CEFA; }
+    .banker-color { color: #FF6347; }
+    .card-slots { display: flex; align-items: center; gap: 1.5vw; }
 
-    /* 路单面板区：去掉死高度，改用比例 */
-   .macau-roads-panel-clean {
-  flex: 0.8;   /* 关键：缩小占比 */
-  max-height: 22vh; /* 限制最大高度 */
-  margin: 1vh 2vw 0;
-  background-color: #ffffff;
-  border: 1px solid #FFD700;
-  border-radius: 1.6vw;
-  padding: 1vw;
-  color: #333;
-  overflow: hidden;
-}
-    .roads-scroll-view {
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden; /* 防止撑高 */
-  white-space: nowrap;
-}
+    /* 【核心修改 2：卡牌放大】 */
     .card-slot {
-  width: 12vw;   /* 原来10vw → 放大 */
-  height: 18vw;
-  max-height: 10vh;
-  max-width: 7vh;
-  font-size: 4.5vw;  /* 字体更大 */
-}
+      width: 12vw; height: 16.5vw; border: 1px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 1vw; display: flex; justify-content: center; align-items: center;
+      font-size: 4vw; font-weight: bold; background-color: rgba(255,255,255,0.05);
+    }
+    .card-rotated { margin-left: 1.5vw; }
+
+    .card-anim { background-color: #fff; border: none; color: #000; box-shadow: 0.3vw 0.5vw 1.3vw rgba(0,0,0,0.6); animation: dropIn 0.3s ease-out forwards; }
+    .card-anim-rotated { background-color: #fff; border: none; color: #000; box-shadow: 0.3vw 0.5vw 1.3vw rgba(0,0,0,0.6); transform: rotate(90deg); animation: dropInRotated 0.3s ease-out forwards; }
+    @keyframes dropIn { 0% { transform: translateY(-2vh); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+    @keyframes dropInRotated { 0% { transform: translateY(-2vh) rotate(90deg); opacity: 0; } 100% { transform: translateY(0) rotate(90deg); opacity: 1; } }
+
+    /* 【核心修改 3：路单面板强制压小】 */
+    .macau-roads-panel-clean {
+      flex: 0 0 12vh; /* 死死压在 12vh，绝对不能变大 */
+      margin: 0 2vw; background-color: #ffffff; border: 1px solid #FFD700; border-radius: 1vw; padding: 0.5vh 1vw; color: #333; overflow: hidden;
+    }
+    .roads-scroll-view { width: 100%; height: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .roads-scroll-content { display: inline-block; height: 100%; vertical-align: top; }
+
+    .road-title-strip { font-size: 2.2vw; font-weight: bold; color: #777; padding-left: 1vw; }
+    .road-title-strip-gold { font-size: 2.2vw; font-weight: bold; color: #b8860b; padding-left: 1vw; border-top: 1px dashed #ccc; margin-top: 0.2vh; }
+
+    /* 路单格子全自适应 */
+    .bead-row-container, .bigroad-row-container { height: calc(50% - 1.5vh); display: flex; flex-direction: row; background: #fff; border-top: 1px solid #e0e0e0; border-left: 1px solid #e0e0e0; }
+    .bead-column-unit, .bigroad-column-unit { display: flex; flex-direction: column; width: 5vw; height: 100%; }
+    .bead-cell-unit, .bigroad-cell-unit { flex: 1; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: center; align-items: center; box-sizing: border-box; }
+    
+    .bead-ball-unit { width: 3.5vw; height: 3.5vw; border-radius: 50%; font-size: 1.8vw; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; }
+    .bigroad-circle-unit { width: 3.2vw; height: 3.2vw; border-radius: 50%; border: 2px solid transparent; position: relative; }
+
+    .bg-banker { background-color: #d90000; }
+    .bg-player { background-color: #1E90FF; }
+    .bg-tie { background-color: #32CD32; }
+    .b-banker { border-color: #d90000; }
+    .b-player { border-color: #1E90FF; }
+    .t-slash { position: absolute; color: #32CD32; font-size: 2.2vw; font-weight: bold; top: -20%; left: 10%; transform: scaleX(1.3); }
 
     /* AI情报智能分析舱屏 */
     .road-intelligence-mega-deck {
-      flex-shrink: 0; margin: 1vh 2vw 0; height: 9vw; max-height: 5.5vh;
-      background-color: rgba(0, 0, 0, 0.75); border: 1px solid #FFD700;
-      border-radius: 1.3vw; display: flex; align-items: center; padding: 0 2.6vw; box-sizing: border-box;
+      flex-shrink: 0; margin: 0.5vh 2vw; height: 4.5vh; background-color: rgba(0, 0, 0, 0.75); border: 1px solid #FFD700;
+      border-radius: 1vw; display: flex; align-items: center; padding: 0 2vw; box-sizing: border-box;
     }
     .road-tips-box-pro { display: flex; align-items: center; width: 100%; height: 100%; overflow: hidden; }
-    .tips-header-tag {
-      background-color: #FFD700; color: #000; font-size: 2.6vw; font-weight: 900;
-      padding: 0.4vh 1.8vw; border-radius: 0.8vw; margin-right: 2vw; white-space: nowrap;
-    }
-    .tips-text-pro { font-size: 3vw; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.2vw; }
+    .tips-header-tag { background-color: #FFD700; color: #000; font-size: 2.4vw; font-weight: 900; padding: 0.2vh 1.5vw; border-radius: 0.8vw; margin-right: 2vw; white-space: nowrap; }
+    .tips-text-pro { font-size: 2.6vw; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.2vw; }
 
     /* 幸运六中奖超级跑马灯特效 */
-    .l6-marquee-banner-pro {
-      width: 100%; height: 85%; overflow: hidden; border-radius: 0.8vw; box-sizing: border-box;
-      animation: goldPulsePro 0.4s infinite alternate; display: flex; align-items: center;
-    }
-    .marquee-glow-layer {
-      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(90deg, #8b6508, #ffd700, #8b6508);
-    }
-    .marquee-text-pro { font-size: 3.2vw; color: #000; font-weight: 900; text-align: center; width: 100%; letter-spacing: 0.3vw; text-shadow: 0 1px 1px rgba(255,255,255,0.6); }
+    .l6-marquee-banner-pro { width: 100%; height: 85%; overflow: hidden; border-radius: 0.8vw; box-sizing: border-box; animation: goldPulsePro 0.4s infinite alternate; display: flex; align-items: center; }
+    .marquee-glow-layer { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(90deg, #8b6508, #ffd700, #8b6508); }
+    .marquee-text-pro { font-size: 3vw; color: #000; font-weight: 900; text-align: center; width: 100%; letter-spacing: 0.3vw; text-shadow: 0 1px 1px rgba(255,255,255,0.6); }
     @keyframes goldPulsePro { 0% { box-shadow: 0 0 1vw #FFD700; filter: brightness(0.9); } 100% { box-shadow: 0 0 4vw #fff; filter: brightness(1.2); } }
 
     /* 自定义筹码调整浮层 */
-    .custom-chip-control { flex-shrink: 0; background-color: rgba(0, 0, 0, 0.85); padding: 0.8vh 2.6vw; border-top: 1px solid #FFD700; margin-top: 1vh; }
-    .control-ops { display: flex; justify-content: space-around; gap: 1.5vw; }
-    .op-btn { background-color: #222; color: #fff; font-size: 3vw; padding: 0.8vh 2.2vw; border-radius: 0.8vw; border: 1px solid #FFD700; cursor: pointer; }
+    .custom-chip-control { flex-shrink: 0; background-color: rgba(0, 0, 0, 0.85); padding: 0.5vh 2.6vw; border-top: 1px solid #FFD700; margin-top: 0.5vh; }
+    .control-ops { display: flex; justify-content: space-around; gap: 1vw; }
+    .op-btn { background-color: #222; color: #fff; font-size: 2.8vw; padding: 0.6vh 2vw; border-radius: 0.8vw; border: 1px solid #FFD700; cursor: pointer; }
     .reset-op { background-color: #d90000; border-color: #ff4d4d; }
 
-    /* 独立控制底舱 - 高度死锁不缩减 */
-    .bottom-control-deck {
-      flex-shrink: 0; background-color: rgba(0, 0, 0, 0.8); border-top: 2px solid #FFD700;
-      display: flex; flex-direction: column; padding-top: 1.2vh;
-      padding-bottom: max(1.5vh, env(safe-area-inset-bottom, 12px));
-    }
-
-    /* 下注区格 */
-    .classic-betting-grid { display: flex; flex-direction: row; padding: 0 2.6vw; gap: 2vw; }
-    .classic-zone {
-      flex: 1; height: 11vw; max-height: 7vh; border: 2px solid #FFD700; border-radius: 1.6vw;
-      display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; box-sizing: border-box; cursor: pointer;
-    }
+    /* 底部核心控制中心 */
+    .bottom-control-deck { flex-shrink: 0; padding-bottom: max(1vh, env(safe-area-inset-bottom, 8px)); background-color: rgba(0, 0, 0, 0.8); border-top: 2px solid #FFD700; }
+    .classic-betting-grid { display: flex; flex-direction: row; padding: 0.8vh 2.6vw; gap: 2vw; }
+    .classic-zone { flex: 1; height: 10vw; border: 2px solid #FFD700; border-radius: 1vw; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; cursor: pointer; }
     .player-color-bg { background-color: rgba(30, 30, 200, 0.35); border-color: #1E90FF; }
     .tie-color-bg { background-color: rgba(30, 200, 30, 0.35); border-color: #32CD32; }
     .banker-color-bg { background-color: rgba(200, 30, 30, 0.35); border-color: #FF4500; }
+    .cz-t { font-size: 3vw; font-weight: bold; }
+    .cz-o { font-size: 2.2vw; color: #FFD700; }
+    .cz-a { position: absolute; background-color: #FFD700; color: #000; font-size: 2.5vw; font-weight: bold; padding: 0.1vh 2vw; border-radius: 2.6vw; top: -1.5vh; box-shadow: 0 0.4vw 0.8vw rgba(0,0,0,0.6); z-index: 10; }
 
-    .cz-t { font-size: 3.2vw; font-weight: bold; }
-    .cz-o { font-size: 2.4vw; color: #FFD700; margin-top: 0.2vh; }
-    .cz-a { position: absolute; background-color: #FFD700; color: #000; font-size: 2.8vw; font-weight: bold; padding: 0.1vh 2vw; border-radius: 2.6vw; top: -1.5vh; box-shadow: 0 0.4vw 0.8vw rgba(0,0,0,0.6); z-index: 10; }
+    .lucky6-premium-bar { display: flex; flex-direction: row; padding: 0 2.6vw; gap: 2vw; margin-top: 0.5vh; }
+    .l6-zone { flex: 1; height: 8vw; border: 1px solid #FFD700; border-radius: 1vw; background-color: rgba(218, 165, 32, 0.4); display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; cursor: pointer; }
+    .l6-t { font-size: 2.4vw; font-weight: bold; color: #fff; }
+    .l6-o { font-size: 2vw; color: #FFD700; }
 
-    /* 幸运六区 */
-    .lucky6-premium-bar { display: flex; flex-direction: row; padding: 0 2.6vw; gap: 2vw; margin-top: 1.2vh; }
-    .l6-zone {
-      flex: 1; height: 10vw; max-height: 6vh; border: 1px solid #FFD700; border-radius: 1.3vw;
-      background-color: rgba(218, 165, 32, 0.4); display: flex; flex-direction: column;
-      justify-content: center; align-items: center; position: relative; box-sizing: border-box; cursor: pointer;
-    }
-    .l6-t { font-size: 2.6vw; font-weight: bold; color: #fff; }
-    .l6-o { font-size: 2.2vw; color: #FFD700; }
-
-    /* 筹码区排版 */
-    .deck-chips-isolated-row { padding: 1.2vh 4vw; margin-top: 1.2vh; background-color: rgba(0, 0, 0, 0.2); }
+    .deck-chips-isolated-row { padding: 0.8vh 4vw; margin-top: 0.5vh; background-color: rgba(0, 0, 0, 0.2); }
     .chips-flex-box { display: flex; justify-content: space-between; align-items: center; }
+    .dg-chip { width: 10vw; height: 10vw; border-radius: 50%; background: radial-gradient(circle, #fff 10%, #d4af37 90%); color: #000; font-size: 2.8vw; font-weight: bold; display: flex; justify-content: center; align-items: center; border: 0.5vw dashed #000; cursor: pointer; transition: transform 0.1s; }
+    .dg-chip-cust { width: 12vw !important; height: 12vw !important; background: radial-gradient(circle, #fff 10%, #ba55d3 90%); }
+    .giant-cust-txt { font-size: 2.4vw; font-weight: bold; text-align: center; }
+    .dg-chip-sel { transform: scale(1.15) translateY(-0.5vh); border-color: #FF4500; box-shadow: 0 0 2vw #FFD700; }
 
-    .dg-chip {
-      width: 11vw; height: 11vw; max-width: 6.5vh; max-height: 6.5vh; border-radius: 50%;
-      background: radial-gradient(circle, #fff 10%, #d4af37 90%); color: #000;
-      font-size: 3vw; font-weight: bold; display: flex; justify-content: center; align-items: center;
-      border: 0.5vw dashed #000; box-sizing: border-box; cursor: pointer; transition: transform 0.1s;
-    }
-    .dg-chip-cust {
-      width: 13vw !important; height: 13vw !important; max-width: 7.5vh; max-height: 7.5vh;
-      background: radial-gradient(circle, #fff 10%, #ba55d3 90%);
-    }
-    .giant-cust-txt { font-size: 2.4vw; font-weight: bold; text-align: center; width: 100%; white-space: nowrap; }
-    .dg-chip-sel { transform: scale(1.15) translateY(-0.5vh); border-color: #FF4500; box-shadow: 0 0 2.5vw #FFD700; }
-
-    /* 操作功能按键 */
-    .deck-ops-action-bar { display: flex; flex-direction: column; padding: 0.8vh 2.6vw 0; gap: 1.2vh; }
+    .deck-ops-action-bar { display: flex; flex-direction: column; padding: 0.8vh 2.6vw 0; gap: 0.8vh; }
     .functional-buttons-row { display: flex; justify-content: space-between; gap: 1.5vw; }
-    .func-btn {
-      color: #fff; font-size: 3.2vw; font-weight: bold; padding: 1.2vh 0; border-radius: 1.3vw;
-      flex: 1; text-align: center; line-height: 1.2; border: none; cursor: pointer;
-    }
+    .func-btn { color: #fff; font-size: 3vw; font-weight: bold; padding: 1vh 0; border-radius: 1vw; flex: 1; text-align: center; border: none; cursor: pointer; }
     .clear-color { background-color: #555; }
     .repeat-color { background-color: #4682B4; border: 1px solid #87CEFA; }
     .double-color { background-color: #B22222; border: 1px solid #FF6347; }
-
-    .main-deal-button {
-      background-color: #FFD700; color: #000; font-size: 4vw; font-weight: bold;
-      width: 100%; border-radius: 1.3vw; padding: 1.4vh 0; border: none; box-shadow: 0 0.5vw 1vw rgba(0,0,0,0.4); cursor: pointer;
-    }
+    .main-deal-button { background-color: #FFD700; color: #000; font-size: 3.8vw; font-weight: bold; width: 100%; border-radius: 1vw; padding: 1.2vh 0; border: none; box-shadow: 0 0.5vw 1vw rgba(0,0,0,0.4); cursor: pointer; margin-top: 0.2vh; }
   </style>
 </head>
 <body>
 
 <div id="app" class="table-container" v-cloak>
-  
   <div class="top-bar">
-    <div class="balance-area">
-      <span class="balance">余额: ¥{{balance}}</span>
-      <button class="recharge-btn" @click="recharge">➕ 充值</button>
-    </div>
+    <div class="balance-area"><span class="balance">余额: ¥{{balance}}</span><button class="recharge-btn" @click="recharge">➕ 充值</button></div>
     <div class="game-counter">第 {{gameCount}} 局</div>
     <span class="bet-total">总注: ¥{{totalBet}}</span>
   </div>
 
   <div class="mode-switcher-bar">
-    <div class="mode-tab border-left-round" :class="{'tab-active-std': gameMode === 'standard'}" @click="switchMode('standard')">
-      标准抽佣 (庄赔0.95)
-    </div>
-    <div class="mode-tab border-right-round" :class="{'tab-active-free': gameMode === 'free'}" @click="switchMode('free')">
-      免佣模式 (庄6点赔一半)
-    </div>
+    <div class="mode-tab border-left-round" :class="{'tab-active-std': gameMode === 'standard'}" @click="switchMode('standard')">标准抽佣 (庄赔0.95)</div>
+    <div class="mode-tab border-right-round" :class="{'tab-active-free': gameMode === 'free'}" @click="switchMode('free')">免佣模式 (庄6点赔一半)</div>
   </div>
 
   <div class="card-display-area">
     <div class="cards-side">
       <div class="side-title player-color">闲 PLAYER [ {{playerPoint}} 点 ]</div>
       <div class="card-slots">
-        <div class="card-slot" :class="{'card-anim': playerCards[0]}">
-          <span v-if="playerCards[0]" :style="{color: playerCards[0].isRed ? '#d90000' : '#000'}">{{playerCards[0].suit}}{{playerCards[0].rank}}</span>
-        </div>
-        <div class="card-slot" :class="{'card-anim': playerCards[1]}">
-          <span v-if="playerCards[1]" :style="{color: playerCards[1].isRed ? '#d90000' : '#000'}">{{playerCards[1].suit}}{{playerCards[1].rank}}</span>
-        </div>
-        <div class="card-slot card-rotated" :class="{'card-anim-rotated': playerCards[2]}">
-          <span v-if="playerCards[2]" :style="{color: playerCards[2].isRed ? '#d90000' : '#000'}">{{playerCards[2].suit}}{{playerCards[2].rank}}</span>
-        </div>
+        <div class="card-slot" :class="{'card-anim': playerCards[0]}"><span v-if="playerCards[0]" :style="{color: playerCards[0].isRed ? '#d90000' : '#000'}">{{playerCards[0].suit}}{{playerCards[0].rank}}</span></div>
+        <div class="card-slot" :class="{'card-anim': playerCards[1]}"><span v-if="playerCards[1]" :style="{color: playerCards[1].isRed ? '#d90000' : '#000'}">{{playerCards[1].suit}}{{playerCards[1].rank}}</span></div>
+        <div class="card-slot card-rotated" :class="{'card-anim-rotated': playerCards[2]}"><span v-if="playerCards[2]" :style="{color: playerCards[2].isRed ? '#d90000' : '#000'}">{{playerCards[2].suit}}{{playerCards[2].rank}}</span></div>
       </div>
     </div>
-    
     <div class="cards-side">
       <div class="side-title banker-color">庄 BANKER [ {{bankerPoint}} 点 ]</div>
       <div class="card-slots">
-        <div class="card-slot" :class="{'card-anim': bankerCards[0]}">
-          <span v-if="bankerCards[0]" :style="{color: bankerCards[0].isRed ? '#d90000' : '#000'}">{{bankerCards[0].suit}}{{bankerCards[0].rank}}</span>
-        </div>
-        <div class="card-slot" :class="{'card-anim': bankerCards[1]}">
-          <span v-if="bankerCards[1]" :style="{color: bankerCards[1].isRed ? '#d90000' : '#000'}">{{bankerCards[1].suit}}{{bankerCards[1].rank}}</span>
-        </div>
-        <div class="card-slot card-rotated" :class="{'card-anim-rotated': bankerCards[2]}">
-          <span v-if="bankerCards[2]" :style="{color: bankerCards[2].isRed ? '#d90000' : '#000'}">{{bankerCards[2].suit}}{{bankerCards[2].rank}}</span>
-        </div>
+        <div class="card-slot" :class="{'card-anim': bankerCards[0]}"><span v-if="bankerCards[0]" :style="{color: bankerCards[0].isRed ? '#d90000' : '#000'}">{{bankerCards[0].suit}}{{bankerCards[0].rank}}</span></div>
+        <div class="card-slot" :class="{'card-anim': bankerCards[1]}"><span v-if="bankerCards[1]" :style="{color: bankerCards[1].isRed ? '#d90000' : '#000'}">{{bankerCards[1].suit}}{{bankerCards[1].rank}}</span></div>
+        <div class="card-slot card-rotated" :class="{'card-anim-rotated': bankerCards[2]}"><span v-if="bankerCards[2]" :style="{color: bankerCards[2].isRed ? '#d90000' : '#000'}">{{bankerCards[2].suit}}{{bankerCards[2].rank}}</span></div>
       </div>
     </div>
   </div>
@@ -240,20 +184,15 @@
         <div class="bead-row-container">
           <div class="bead-column-unit" v-for="(col, cIndex) in displayBeadPlate" :key="'bead-'+cIndex">
             <div class="bead-cell-unit" v-for="(cell, rIndex) in col" :key="'bead-cell-'+rIndex">
-              <div class="bead-ball-unit" :class="cell === 'banker' ? 'bg-banker' : (cell === 'player' ? 'bg-player' : (cell === 'tie' ? 'bg-tie' : ''))">
-                <span v-if="cell !== 'empty'">{{cell === 'banker' ? '庄' : (cell === 'player' ? '闲' : '和')}}</span>
-              </div>
+              <div class="bead-ball-unit" :class="cell === 'banker' ? 'bg-banker' : (cell === 'player' ? 'bg-player' : (cell === 'tie' ? 'bg-tie' : ''))"><span v-if="cell !== 'empty'">{{cell === 'banker' ? '庄' : (cell === 'player' ? '闲' : '和')}}</span></div>
             </div>
           </div>
         </div>
-
-        <div class="road-title-strip-gold">正统大路走势 (每列固定6行/长龙自动转弯)</div>
+        <div class="road-title-strip-gold">正统大路走势</div>
         <div class="bigroad-row-container">
           <div class="bigroad-column-unit" v-for="(col, cIndex) in displayBigRoad" :key="'big-'+cIndex">
             <div class="bigroad-cell-unit" v-for="(cell, rIndex) in col" :key="'big-cell-'+rIndex">
-              <div class="bigroad-circle-unit" :class="cell.winner === 'banker' ? 'b-banker' : (cell.winner === 'player' ? 'b-player' : '')">
-                <span class="t-slash" v-if="cell.hasTie">/</span>
-              </div>
+              <div class="bigroad-circle-unit" :class="cell.winner === 'banker' ? 'b-banker' : (cell.winner === 'player' ? 'b-player' : '')"><span class="t-slash" v-if="cell.hasTie">/</span></div>
             </div>
           </div>
         </div>
@@ -262,15 +201,8 @@
   </div>
 
   <div class="road-intelligence-mega-deck">
-    <div class="l6-marquee-banner-pro" v-if="l6EffectActive">
-      <div class="marquee-glow-layer">
-        <span class="marquee-text-pro">{{l6EffectText}}</span>
-      </div>
-    </div>
-    <div class="road-tips-box-pro" v-else>
-      <div class="tips-header-tag">路单AI分析</div>
-      <span class="tips-text-pro">{{roadTrendTip}}</span>
-    </div>
+    <div class="l6-marquee-banner-pro" v-if="l6EffectActive"><div class="marquee-glow-layer"><span class="marquee-text-pro">{{l6EffectText}}</span></div></div>
+    <div class="road-tips-box-pro" v-else><div class="tips-header-tag">AI分析</div><span class="tips-text-pro">{{roadTrendTip}}</span></div>
   </div>
 
   <div class="custom-chip-control" v-if="showControl">
@@ -286,49 +218,21 @@
 
   <div class="bottom-control-deck">
     <div class="classic-betting-grid">
-      <div class="classic-zone player-color-bg" @click="placeBet('player')">
-        <span class="cz-t">闲 PLAYER</span>
-        <span class="cz-o">1 : 1</span>
-        <div class="cz-a" v-if="bets.player > 0">¥{{bets.player}}</div>
-      </div>
-      <div class="classic-zone tie-color-bg" @click="placeBet('tie')">
-        <span class="cz-t">和 TIE</span>
-        <span class="cz-o">1 : 8</span>
-        <div class="cz-a" v-if="bets.tie > 0">¥{{bets.tie}}</div>
-      </div>
-      <div class="classic-zone banker-color-bg" @click="placeBet('banker')">
-        <span class="cz-t">庄 BANKER</span>
-        <span class="cz-o">{{gameMode === 'standard' ? '1 : 0.95' : '1 : 1'}}</span>
-        <div class="cz-a" v-if="bets.banker > 0">¥{{bets.banker}}</div>
-      </div>
+      <div class="classic-zone player-color-bg" @click="placeBet('player')"><span class="cz-t">闲 PLAYER</span><span class="cz-o">1 : 1</span><div class="cz-a" v-if="bets.player > 0">¥{{bets.player}}</div></div>
+      <div class="classic-zone tie-color-bg" @click="placeBet('tie')"><span class="cz-t">和 TIE</span><span class="cz-o">1 : 8</span><div class="cz-a" v-if="bets.tie > 0">¥{{bets.tie}}</div></div>
+      <div class="classic-zone banker-color-bg" @click="placeBet('banker')"><span class="cz-t">庄 BANKER</span><span class="cz-o">{{gameMode === 'standard' ? '1 : 0.95' : '1 : 1'}}</span><div class="cz-a" v-if="bets.banker > 0">¥{{bets.banker}}</div></div>
     </div>
 
     <div class="lucky6-premium-bar" v-if="gameMode === 'free'">
-      <div class="l6-zone" @click="placeBet('lucky6_any')">
-        <span class="l6-t">幸运6 (任意)</span>
-        <span class="l6-o">1:12 或 1:20</span>
-        <div class="cz-a" v-if="bets.lucky6_any > 0">¥{{bets.lucky6_any}}</div>
-      </div>
-      <div class="l6-zone" @click="placeBet('lucky6_2cards')">
-        <span class="l6-t">幸运6 (2张牌)</span>
-        <span class="l6-o">1 : 22</span>
-        <div class="cz-a" v-if="bets.lucky6_2cards > 0">¥{{bets.lucky6_2cards}}</div>
-      </div>
-      <div class="l6-zone" @click="placeBet('lucky6_3cards')">
-        <span class="l6-t">幸运6 (3张牌)</span>
-        <span class="l6-o">1 : 50</span>
-        <div class="cz-a" v-if="bets.lucky6_3cards > 0">¥{{bets.lucky6_3cards}}</div>
-      </div>
+      <div class="l6-zone" @click="placeBet('lucky6_any')"><span class="l6-t">幸运6(任意)</span><span class="l6-o">1:12或1:20</span><div class="cz-a" v-if="bets.lucky6_any > 0">¥{{bets.lucky6_any}}</div></div>
+      <div class="l6-zone" @click="placeBet('lucky6_2cards')"><span class="l6-t">幸运6(2张)</span><span class="l6-o">1 : 22</span><div class="cz-a" v-if="bets.lucky6_2cards > 0">¥{{bets.lucky6_2cards}}</div></div>
+      <div class="l6-zone" @click="placeBet('lucky6_3cards')"><span class="l6-t">幸运6(3张)</span><span class="l6-o">1 : 50</span><div class="cz-a" v-if="bets.lucky6_3cards > 0">¥{{bets.lucky6_3cards}}</div></div>
     </div>
 
     <div class="deck-chips-isolated-row">
       <div class="chips-flex-box">
-        <div v-for="item in chips" :key="item" class="dg-chip" :class="{'dg-chip-sel': selectedChip === item}" @click="selectChip(item)">
-          {{item}}
-        </div>
-        <div class="dg-chip dg-chip-cust" :class="{'dg-chip-sel': selectedChip === 'custom'}" @click="selectCustomChip">
-          <span class="giant-cust-txt">{{customChipValue > 0 ? customChipValue : '自定义'}}</span>
-        </div>
+        <div v-for="item in chips" :key="item" class="dg-chip" :class="{'dg-chip-sel': selectedChip === item}" @click="selectChip(item)">{{item}}</div>
+        <div class="dg-chip dg-chip-cust" :class="{'dg-chip-sel': selectedChip === 'custom'}" @click="selectCustomChip"><span class="giant-cust-txt">{{customChipValue > 0 ? customChipValue : '自定义'}}</span></div>
       </div>
     </div>
 
@@ -380,30 +284,15 @@ const { createApp } = Vue;
 createApp({
   data() {
     return {
-      balance: 10000,
-      totalBet: 0,
-      chips: [20, 100, 500, 1000, 5000],
-      selectedChip: 100,
-      gameMode: 'standard', 
-      customChipValue: 0, 
-      showControl: false, 
-      lastTapTime: 0,     
+      balance: 10000, totalBet: 0, chips: [20, 100, 500, 1000, 5000], selectedChip: 100,
+      gameMode: 'standard', customChipValue: 0, showControl: false, lastTapTime: 0,     
       bets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 },
       lastBets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 }, 
-      gameCount: 1, 
-      rawHistory: [],        
-      displayBeadPlate: [],  
-      displayBigRoad: [],    
-      roadTrendTip: "大路积攒中，智能AI正在全盘监控长庄长闲、单跳、两室一厅热门路子...", 
-      l6EffectActive: false,
-      l6EffectText: "",
-      stats: { banker: 0, player: 0, tie: 0 },
-      shoe: [],
-      playerCards: [], bankerCards: [],
-      playerPoint: 0, bankerPoint: 0,
-      isDealing: false,
-      needResetShoeNextTurn: false,
-      clickTimer: null
+      gameCount: 1, rawHistory: [], displayBeadPlate: [], displayBigRoad: [],    
+      roadTrendTip: "大路积攒中，智能AI正在监控长龙单跳等路子...", 
+      l6EffectActive: false, l6EffectText: "", stats: { banker: 0, player: 0, tie: 0 },
+      shoe: [], playerCards: [], bankerCards: [], playerPoint: 0, bankerPoint: 0,
+      isDealing: false, needResetShoeNextTurn: false, clickTimer: null
     }
   },
   mounted() {
@@ -421,151 +310,78 @@ createApp({
     },
     switchMode(targetMode) {
       if (this.isDealing) return;
-      if (this.totalBet > 0) {
-        this.showToast('请先清空当前下注再更换模式');
-        return;
-      }
+      if (this.totalBet > 0) { this.showToast('请先清空当前下注再更换模式'); return; }
       this.gameMode = targetMode;
-      this.vibrate('light');
       this.showToast(targetMode === 'standard' ? '已切至：标准抽佣模式' : '已切至：免佣幸运六模式');
     },
     resetAllRoadMatrix() {
       let beadMatrix = [];
-      for(let c=0; c<15; c++) {
-        let col = [];
-        for(let r=0; r<6; r++) col.push('empty');
-        beadMatrix.push(col);
-      }
+      for(let c=0; c<15; c++) { let col = []; for(let r=0; r<6; r++) col.push('empty'); beadMatrix.push(col); }
       let bigMatrix = [];
-      for (let c = 0; c < 30; c++) {
-        let col = [];
-        for (let r = 0; r < 6; r++) col.push({ winner: 'empty', hasTie: false });
-        bigMatrix.push(col);
-      }
-      this.displayBeadPlate = beadMatrix;
-      this.displayBigRoad = bigMatrix;
+      for (let c = 0; c < 30; c++) { let col = []; for (let r = 0; r < 6; r++) col.push({ winner: 'empty', hasTie: false }); bigMatrix.push(col); }
+      this.displayBeadPlate = beadMatrix; this.displayBigRoad = bigMatrix;
       this.$nextTick(() => { if(this.$refs.roadsScroll) this.$refs.roadsScroll.scrollLeft = 0; });
     },
-    createShoe() {
-      let newShoe = gameUtils.createDeck();
-      this.shoe = gameUtils.shuffle(newShoe);
-    },
-    adjustCustomChip(addVal) {
-      if (this.isDealing) return;
-      this.customChipValue += addVal;
-      this.vibrate('light');
-    },
-    resetCustomChip() {
-      if (this.isDealing) return;
-      this.customChipValue = 0;
-      this.vibrate('light');
-    },
-    selectChip(val) {
-      this.selectedChip = val;
-      this.showControl = false;
-      this.vibrate('light');
-    },
+    createShoe() { this.shoe = gameUtils.shuffle(gameUtils.createDeck()); },
+    adjustCustomChip(addVal) { if (!this.isDealing) this.customChipValue += addVal; },
+    resetCustomChip() { if (!this.isDealing) this.customChipValue = 0; },
+    selectChip(val) { this.selectedChip = val; this.showControl = false; },
     selectCustomChip() {
       if (this.isDealing) return;
       let curTime = new Date().getTime();
       let gap = curTime - this.lastTapTime;
       this.lastTapTime = curTime;
       this.selectedChip = 'custom';
-
       if (gap < 300) {
-        clearTimeout(this.clickTimer);
-        this.showControl = !this.showControl;
-        this.vibrate('medium');
+        clearTimeout(this.clickTimer); this.showControl = !this.showControl;
       } else {
-        this.clickTimer = setTimeout(() => {
-          if (this.customChipValue <= 0) {
-            this.showToast('请【快速双击】设置自由筹码面额');
-          }
-        }, 300);
+        this.clickTimer = setTimeout(() => { if (this.customChipValue <= 0) this.showToast('请【快速双击】设置自由筹码面额'); }, 300);
       }
     },
     placeBet(zone) {
       if (this.isDealing) return;
       let chip = this.selectedChip === 'custom' ? this.customChipValue : this.selectedChip;
-      if (this.selectedChip === 'custom' && chip <= 0) {
-        this.showToast('请先双击筹码配置自定义面额');
-        return;
-      }
+      if (this.selectedChip === 'custom' && chip <= 0) { this.showToast('请先双击筹码配置自定义面额'); return; }
       if (this.balance < chip) { this.showToast('余额不足'); return; }
-      
-      this.bets[zone] += chip;
-      this.balance -= chip;
-      this.totalBet += chip;
-      this.vibrate('light');
+      this.bets[zone] += chip; this.balance -= chip; this.totalBet += chip;
     },
     clearBets() {
       if (this.isDealing) return;
-      this.balance += this.totalBet;
-      this.totalBet = 0;
+      this.balance += this.totalBet; this.totalBet = 0;
       this.bets = { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 };
-      this.vibrate('light');
     },
     repeatBets() {
       if (this.isDealing) return;
       const last = this.lastBets;
       let reqTotal = last.banker + last.tie + last.player;
-      if (this.gameMode === 'free') {
-        reqTotal += (last.lucky6_any + last.lucky6_2cards + last.lucky6_3cards);
-      }
+      if (this.gameMode === 'free') reqTotal += (last.lucky6_any + last.lucky6_2cards + last.lucky6_3cards);
       if (reqTotal === 0) { this.showToast('无上局下注记录'); return; }
-      
       let currentBalance = this.balance + this.totalBet;
       if (currentBalance < reqTotal) { this.showToast('余额不足'); return; }
-      
       this.clearBets();
       let nextBets = { ...last };
-      if (this.gameMode === 'standard') {
-        nextBets.lucky6_any = 0; nextBets.lucky6_2cards = 0; nextBets.lucky6_3cards = 0;
-      }
-      this.bets = nextBets;
-      this.balance = currentBalance - reqTotal;
-      this.totalBet = reqTotal;
-      this.vibrate('light');
+      if (this.gameMode === 'standard') { nextBets.lucky6_any = 0; nextBets.lucky6_2cards = 0; nextBets.lucky6_3cards = 0; }
+      this.bets = nextBets; this.balance = currentBalance - reqTotal; this.totalBet = reqTotal;
     },
     doubleBets() {
       if (this.isDealing) return;
       let targetBets = this.totalBet === 0 ? { ...this.lastBets } : { ...this.bets };
-      if (this.gameMode === 'standard') {
-        targetBets.lucky6_any = 0; targetBets.lucky6_2cards = 0; targetBets.lucky6_3cards = 0;
-      }
+      if (this.gameMode === 'standard') { targetBets.lucky6_any = 0; targetBets.lucky6_2cards = 0; targetBets.lucky6_3cards = 0; }
       let reqAmt = targetBets.banker + targetBets.tie + targetBets.player + targetBets.lucky6_any + targetBets.lucky6_2cards + targetBets.lucky6_3cards;
       if (reqAmt === 0) { this.showToast('桌面无有效筹码'); return; }
-      
       let currentBalance = this.balance + this.totalBet;
-      if (currentBalance < reqAmt * 2) { this.showToast('余额不足，无法执行加倍'); return; }
-      
-      this.bets = { 
-        banker: targetBets.banker * 2, tie: targetBets.tie * 2, player: targetBets.player * 2,
-        lucky6_any: targetBets.lucky6_any * 2, lucky6_2cards: targetBets.lucky6_2cards * 2, lucky6_3cards: targetBets.lucky6_3cards * 2
-      };
-      this.balance = currentBalance - (reqAmt * 2);
-      this.totalBet = reqAmt * 2;
-      this.vibrate('light');
+      if (currentBalance < reqAmt * 2) { this.showToast('余额不足，无法加倍'); return; }
+      this.bets = { banker: targetBets.banker * 2, tie: targetBets.tie * 2, player: targetBets.player * 2, lucky6_any: targetBets.lucky6_any * 2, lucky6_2cards: targetBets.lucky6_2cards * 2, lucky6_3cards: targetBets.lucky6_3cards * 2 };
+      this.balance = currentBalance - (reqAmt * 2); this.totalBet = reqAmt * 2;
     },
     dealCards() {
       if (this.isDealing) return;
       if (this.totalBet === 0) { this.showToast('请先选择对应区域下注'); return; }
-      
       if (this.needResetShoeNextTurn) {
-        this.createShoe();
-        this.resetAllRoadMatrix();
-        this.rawHistory = [];
-        this.gameCount = 1;
-        this.stats = { banker: 0, player: 0, tie: 0 };
-        this.needResetShoeNextTurn = false;
-        this.l6EffectActive = false;
-        this.roadTrendTip = "新牌靴重开，智能大奖情报监控开启！";
-        this.showToast('全新牌靴！重新写路');
+        this.createShoe(); this.resetAllRoadMatrix(); this.rawHistory = []; this.gameCount = 1; this.stats = { banker: 0, player: 0, tie: 0 };
+        this.needResetShoeNextTurn = false; this.l6EffectActive = false; this.roadTrendTip = "新牌靴重开，智能大奖监控开启！";
       }
-
-      this.lastBets = { ...this.bets };
-      this.showControl = false;
-      this.isDealing = true; 
+      this.lastBets = { ...this.bets }; this.showControl = false; this.isDealing = true; 
       
       let currentShoe = this.shoe;
       let pCards = [currentShoe.pop(), currentShoe.pop()];
@@ -591,73 +407,46 @@ createApp({
         bPoint = gameUtils.getPoint(bCards);
       }
 
-      let sequence = [
-        { side: 'player', card: pCards[0] }, { side: 'banker', card: bCards[0] },
-        { side: 'player', card: pCards[1] }, { side: 'banker', card: bCards[1] }
-      ];
+      let sequence = [{ side: 'player', card: pCards[0] }, { side: 'banker', card: bCards[0] }, { side: 'player', card: pCards[1] }, { side: 'banker', card: bCards[1] }];
       if (pCards[2]) sequence.push({ side: 'player', card: pCards[2] });
       if (bCards[2]) sequence.push({ side: 'banker', card: bCards[2] });
 
-      this.shoe = currentShoe;
-      this.playerCards = []; this.bankerCards = [];
-      this.playerPoint = 0; this.bankerPoint = 0;
-
+      this.shoe = currentShoe; this.playerCards = []; this.bankerCards = []; this.playerPoint = 0; this.bankerPoint = 0;
       let step = 0; let currentPCards = []; let currentBCards = [];
       const dealNext = () => {
-        if (step >= sequence.length) {
-          this.processSettleQueue(pPoint, bPoint, pCards.length, bCards.length);
-          return;
-        }
+        if (step >= sequence.length) { this.processSettleQueue(pPoint, bPoint, pCards.length, bCards.length); return; }
         let action = sequence[step];
-        if (action.side === 'player') {
-          currentPCards.push(action.card); this.playerCards = [...currentPCards]; this.playerPoint = gameUtils.getPoint(currentPCards);
-        } else {
-          currentBCards.push(action.card); this.bankerCards = [...currentBCards]; this.bankerPoint = gameUtils.getPoint(currentBCards);
-        }
-        this.vibrate('light'); step++; setTimeout(dealNext, 600);
+        if (action.side === 'player') { currentPCards.push(action.card); this.playerCards = [...currentPCards]; this.playerPoint = gameUtils.getPoint(currentPCards); } 
+        else { currentBCards.push(action.card); this.bankerCards = [...currentBCards]; this.bankerPoint = gameUtils.getPoint(currentBCards); }
+        step++; setTimeout(dealNext, 600);
       };
       dealNext();
     },
     generatePureMacauRoads(historyArray) {
       let beadMatrix = []; let bCol = [];
-      for(let i=0; i<historyArray.length; i++) {
-        bCol.push(historyArray[i]);
-        if(bCol.length === 6) { beadMatrix.push(bCol); bCol = []; }
-      }
+      for(let i=0; i<historyArray.length; i++) { bCol.push(historyArray[i]); if(bCol.length === 6) { beadMatrix.push(bCol); bCol = []; } }
       if(bCol.length > 0) { while(bCol.length < 6) bCol.push('empty'); beadMatrix.push(bCol); }
       while(beadMatrix.length < 15) { beadMatrix.push(['empty','empty','empty','empty','empty','empty']); }
 
       let bigMatrix = [];
-      const createCol = () => {
-        let col = [];
-        for(let i=0; i<6; i++) col.push({ winner: 'empty', hasTie: false });
-        return col;
-      };
+      const createCol = () => { let col = []; for(let i=0; i<6; i++) col.push({ winner: 'empty', hasTie: false }); return col; };
       bigMatrix.push(createCol());
-      let currentC = 0; let currentR = 0; let lastWin = null;
-      let streakStartCol = 0;
+      let currentC = 0; let currentR = 0; let lastWin = null; let streakStartCol = 0;
 
       for (let i = 0; i < historyArray.length; i++) {
         let res = historyArray[i];
         if (res === 'tie') {
-          if (lastWin === null) bigMatrix[currentC][currentR] = { winner: 'tie', hasTie: true };
-          else bigMatrix[currentC][currentR].hasTie = true;
+          if (lastWin === null) bigMatrix[currentC][currentR] = { winner: 'tie', hasTie: true }; else bigMatrix[currentC][currentR].hasTie = true;
           continue;
         }
         if (lastWin === null) { bigMatrix[currentC][currentR].winner = res; lastWin = res; streakStartCol = currentC; continue; }
         if (res === lastWin) {
-          if (currentR + 1 < 6 && bigMatrix[currentC][currentR + 1].winner === 'empty') {
-            currentR++; 
-          } else {
-            currentC++; while(currentC >= bigMatrix.length) bigMatrix.push(createCol());
-          }
+          if (currentR + 1 < 6 && bigMatrix[currentC][currentR + 1].winner === 'empty') { currentR++; } else { currentC++; while(currentC >= bigMatrix.length) bigMatrix.push(createCol()); }
           bigMatrix[currentC][currentR].winner = res;
         } else {
           currentC = streakStartCol + 1; currentR = 0;
           while(currentC >= bigMatrix.length) bigMatrix.push(createCol());
-          while (bigMatrix[currentC][currentR].winner !== 'empty') {
-            currentC++; if (currentC >= bigMatrix.length) bigMatrix.push(createCol());
-          }
+          while (bigMatrix[currentC][currentR].winner !== 'empty') { currentC++; if (currentC >= bigMatrix.length) bigMatrix.push(createCol()); }
           bigMatrix[currentC][currentR].winner = res; lastWin = res; streakStartCol = currentC;
         }
       }
@@ -666,71 +455,36 @@ createApp({
     },
     analyzeRoadTrends(historyWithoutTies) {
       let len = historyWithoutTies.length;
-      if (len < 3) return "热门盘口路单蓄势中，AI监测器已开启...";
-
-      let last = historyWithoutTies[len - 1];
-      let dragonCount = 0;
-      for(let i = len - 1; i >= 0; i--) {
-        if(historyWithoutTies[i] === last) dragonCount++;
-        else break;
-      }
-      if (dragonCount >= 4) {
-        return `【名路提示：长${last === 'banker' ? '庄' : '闲'}】🔥 监测到长${last === 'banker' ? '庄' : '闲'}长龙正连开 ${dragonCount} 局！建议顺龙而行！`;
-      }
-
+      if (len < 3) return "热门盘口路单蓄势中...";
+      let last = historyWithoutTies[len - 1]; let dragonCount = 0;
+      for(let i = len - 1; i >= 0; i--) { if(historyWithoutTies[i] === last) dragonCount++; else break; }
+      if (dragonCount >= 4) return `【名路提示】长${last === 'banker' ? '庄' : '闲'}连开 ${dragonCount} 局！建议顺龙！`;
       let jumpCount = 1;
-      for (let i = len - 1; i > 0; i--) {
-        if (historyWithoutTies[i] !== historyWithoutTies[i-1]) jumpCount++;
-        else break;
-      }
-      if (jumpCount >= 4) {
-        return `【名路提示：单跳路】🕺 极热单跳！庄闲正呈现 ${jumpCount} 手交替大路，切勿轻易斩龙！`;
-      }
-
+      for (let i = len - 1; i > 0; i--) { if (historyWithoutTies[i] !== historyWithoutTies[i-1]) jumpCount++; else break; }
+      if (jumpCount >= 4) return `【名路提示】热单跳！呈现 ${jumpCount} 手交替大路！`;
       if (len >= 6) {
         let h = historyWithoutTies;
-        if (h[len-6]===h[len-5] && h[len-5]!==h[len-4] && h[len-4]===h[len-3] && h[len-3]===h[len-2] && h[len-2]!==h[len-1]) {
-          return `【名路提示：两室一厅】🏠 经典‘${h[len-6]==='banker'?'庄庄闲':'闲闲庄'}’两室一厅成型！推荐：${h[len-6]==='banker'?'庄':'闲'}！`;
-        }
+        if (h[len-6]===h[len-5] && h[len-5]!==h[len-4] && h[len-4]===h[len-3] && h[len-3]===h[len-2] && h[len-2]!==h[len-1]) return `【名路提示】经典两室一厅成型！推荐：${h[len-6]==='banker'?'庄':'闲'}！`;
       }
-      return `【名路提示】当前盘口大数据分布平稳，看路客请稳步下注。`;
+      return `【名路提示】当前盘口平稳，请稳步下注。`;
     },
     processSettleQueue(pPoint, bPoint, pCardCount, bCardCount) {
-      let bets = this.bets;
-      let resultMsg = "";
-      let currentWinner = "";
-      
+      let bets = this.bets; let resultMsg = ""; let currentWinner = "";
       let playerWin = 0; let bankerWin = 0; let tieWin = 0; let lucky6Win = 0;
       let triggeredL6 = false; let effectTextStr = "";
 
-      if (pPoint > bPoint) {
-        resultMsg = "闲赢"; currentWinner = "player"; playerWin = bets.player * 2;
-      } else if (bPoint > pPoint) {
+      if (pPoint > bPoint) { resultMsg = "闲赢"; currentWinner = "player"; playerWin = bets.player * 2; } 
+      else if (bPoint > pPoint) {
         resultMsg = "庄赢"; currentWinner = "banker";
-        
-        if (this.gameMode === 'standard') {
-          bankerWin = bets.banker * 1.95;
-        } else {
+        if (this.gameMode === 'standard') { bankerWin = bets.banker * 1.95; } 
+        else {
           if (bPoint === 6) {
-            resultMsg = "庄赢 (6点免佣减半)";
-            bankerWin = bets.banker * 1.5;
-
+            resultMsg = "庄赢 (6点免佣减半)"; bankerWin = bets.banker * 1.5;
             let pureL6Profit = 0;
-            if (bCardCount === 2) {
-              pureL6Profit = (bets.lucky6_any * 12) + (bets.lucky6_2cards * 22);
-              lucky6Win = (bets.lucky6_any * 13) + (bets.lucky6_2cards * 23); 
-            } else if (bCardCount === 3) {
-              pureL6Profit = (bets.lucky6_any * 20) + (bets.lucky6_3cards * 50);
-              lucky6Win = (bets.lucky6_any * 21) + (bets.lucky6_3cards * 51);
-            }
-
-            if (pureL6Profit > 0) {
-              triggeredL6 = true;
-              effectTextStr = `🎉🔥 中幸运6！斩获 ${bCardCount === 2 ? '12/22' : '20/50'} 倍奖金 ¥${pureL6Profit}！！！ 🔥🎉`;
-            }
-          } else {
-            bankerWin = bets.banker * 2;
-          }
+            if (bCardCount === 2) { pureL6Profit = (bets.lucky6_any * 12) + (bets.lucky6_2cards * 22); lucky6Win = (bets.lucky6_any * 13) + (bets.lucky6_2cards * 23); } 
+            else if (bCardCount === 3) { pureL6Profit = (bets.lucky6_any * 20) + (bets.lucky6_3cards * 50); lucky6Win = (bets.lucky6_any * 21) + (bets.lucky6_3cards * 51); }
+            if (pureL6Profit > 0) { triggeredL6 = true; effectTextStr = `🎉🔥 中幸运6！斩获奖金 ¥${pureL6Profit}！！！ 🔥🎉`; }
+          } else { bankerWin = bets.banker * 2; }
         }
       } else {
         resultMsg = "和局"; currentWinner = "tie";
@@ -739,73 +493,43 @@ createApp({
 
       let totalTurnover = playerWin + bankerWin + tieWin + lucky6Win;
       let isShoeEnd = this.shoe.length < 6;
-
-      let detailContent = `闲盘口赢取: ¥${playerWin.toFixed(2)}\n庄盘口赢取: ¥${bankerWin.toFixed(2)}\n和盘口赢取: ¥${tieWin.toFixed(2)}`;
-      if (this.gameMode === 'free') {
-        detailContent += `\n幸运六赢取: ¥${lucky6Win.toFixed(2)}`;
-      }
+      let detailContent = `闲赢取: ¥${playerWin.toFixed(2)}\n庄赢取: ¥${bankerWin.toFixed(2)}\n和赢取: ¥${tieWin.toFixed(2)}`;
+      if (this.gameMode === 'free') detailContent += `\n幸运六赢取: ¥${lucky6Win.toFixed(2)}`;
 
       let newHistory = [...this.rawHistory, currentWinner];
       let roadsData = this.generatePureMacauRoads(newHistory);
       this.stats[currentWinner] += 1;
 
-      let historyWithoutTies = newHistory.filter(item => item !== 'tie');
-      let nextTrendTip = this.analyzeRoadTrends(historyWithoutTies);
-
+      let nextTrendTip = this.analyzeRoadTrends(newHistory.filter(item => item !== 'tie'));
       let lastValidColIndex = 0;
-      for (let c = roadsData.big.length - 1; c >= 0; c--) {
-        if (roadsData.big[c][0].winner !== 'empty') { lastValidColIndex = c; break; }
-      }
+      for (let c = roadsData.big.length - 1; c >= 0; c--) { if (roadsData.big[c][0].winner !== 'empty') { lastValidColIndex = c; break; } }
       let targetScroll = lastValidColIndex >= 14 ? (lastValidColIndex - 13) * 26 : 0;
 
       if (triggeredL6) {
         this.l6EffectActive = true; this.l6EffectText = effectTextStr;
-        this.vibrate('long');
-        setTimeout(() => {
-          this.triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll);
-        }, 2500);
+        setTimeout(() => { this.triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll); }, 2500);
       } else {
         this.triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll);
       }
     },
     triggerFinalModal(totalTurnover, resultMsg, detailContent, isShoeEnd, newHistory, roadsData, nextTrendTip, targetScroll) {
       setTimeout(() => {
-        alert(`【开牌结果：${resultMsg}】\n[ 闲 ${this.playerPoint} 点 vs 庄 ${this.bankerPoint} 点 ]\n\n${detailContent}` + (isShoeEnd ? "\n\n⚠️ 本靴结束，下局将重新洗牌" : ""));
-        
+        alert(`【${resultMsg}】\n[闲 ${this.playerPoint}点 vs 庄 ${this.bankerPoint}点]\n\n${detailContent}` + (isShoeEnd ? "\n\n⚠️ 本靴结束，下局重新洗牌" : ""));
         this.balance = parseFloat((this.balance + totalTurnover).toFixed(2));
-        this.totalBet = 0;
-        this.bets = { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 };
-        this.playerCards = []; this.bankerCards = [];
-        this.rawHistory = newHistory;
-        this.displayBeadPlate = roadsData.bead;
-        this.displayBigRoad = roadsData.big;
-        this.gameCount += 1;
-        this.roadTrendTip = nextTrendTip;
-        this.needResetShoeNextTurn = isShoeEnd;
-        this.l6EffectActive = false; 
-        this.isDealing = false;
-        
-        this.$nextTick(() => {
-          if(this.$refs.roadsScroll) this.$refs.roadsScroll.scrollLeft = targetScroll;
-        });
+        this.totalBet = 0; this.bets = { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 };
+        this.playerCards = []; this.bankerCards = []; this.rawHistory = newHistory;
+        this.displayBeadPlate = roadsData.bead; this.displayBigRoad = roadsData.big;
+        this.gameCount += 1; this.roadTrendTip = nextTrendTip; this.needResetShoeNextTurn = isShoeEnd;
+        this.l6EffectActive = false; this.isDealing = false;
+        this.$nextTick(() => { if(this.$refs.roadsScroll) this.$refs.roadsScroll.scrollLeft = targetScroll; });
       }, 300);
     },
     recharge() {
       if (this.isDealing) return;
-      const res = prompt("选择或手动输入充值金额 (如: 5000, 10000, 100000):", "10000");
+      const res = prompt("输入充值金额:", "10000");
       let amt = parseInt(res);
-      if (!isNaN(amt) && amt > 0) {
-        this.balance += amt;
-        this.showToast(`成功充值 ¥${amt}`);
-        this.vibrate('light');
-      } else if (res !== null) {
-        this.showToast("金额无效");
-      }
-    },
-    vibrate(type) {
-      if (navigator.vibrate) {
-        navigator.vibrate(type === 'long' ? 200 : (type === 'medium' ? 30 : 15));
-      }
+      if (!isNaN(amt) && amt > 0) { this.balance += amt; this.showToast(`成功充值 ¥${amt}`); } 
+      else if (res !== null) { this.showToast("金额无效"); }
     }
   }
 }).mount('#app');
