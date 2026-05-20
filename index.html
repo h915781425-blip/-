@@ -38,10 +38,9 @@
     .tab-active-std { background-color: #B22222; color: #fff; border-color: #FF6347; }
     .tab-active-free { background-color: #FFD700; color: #000; border-color: #FFD700; font-weight: 900; }
 
-    /* 【核心修改 1：发牌区最大化】 */
+    /* 【核心修改 1：发牌区高度自适应内容，不额外霸占空间】 */
     .card-display-area {
-      flex: 1 1 auto; /* 自动吸收所有剩余空间 */
-      min-height: 20vh; /* 保证最小高度 */
+      flex: 0 0 auto; /* 高度包住牌即可，一像素不多占 */
       display: flex; justify-content: space-between;
       margin: 1vh 2vw; padding: 1.5vh 2vw; background-color: rgba(0, 0, 0, 0.5);
       border: 1px solid #FFD700; border-radius: 1.6vw; align-items: center;
@@ -52,7 +51,7 @@
     .banker-color { color: #FF6347; }
     .card-slots { display: flex; align-items: center; gap: 1.5vw; }
 
-    /* 【核心修改 2：卡牌放大】 */
+    /* 卡牌尺寸维持大气 */
     .card-slot {
       width: 12vw; height: 16.5vw; border: 1px dashed rgba(255, 255, 255, 0.3);
       border-radius: 1vw; display: flex; justify-content: center; align-items: center;
@@ -65,10 +64,11 @@
     @keyframes dropIn { 0% { transform: translateY(-2vh); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
     @keyframes dropInRotated { 0% { transform: translateY(-2vh) rotate(90deg); opacity: 0; } 100% { transform: translateY(0) rotate(90deg); opacity: 1; } }
 
-    /* 【核心修改 3：路单面板强制压小】 */
+    /* 【核心修改 2：路单面板填满剩余的所有高度】 */
     .macau-roads-panel-clean {
-      flex: 0 0 12vh; /* 死死压在 12vh，绝对不能变大 */
+      flex: 1 1 auto; /* 自动吸收发牌区让出来的所有空间 */
       margin: 0 2vw; background-color: #ffffff; border: 1px solid #FFD700; border-radius: 1vw; padding: 0.5vh 1vw; color: #333; overflow: hidden;
+      min-height: 0; /* 允许必要时缩小 */
     }
     .roads-scroll-view { width: 100%; height: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
     .roads-scroll-content { display: inline-block; height: 100%; vertical-align: top; }
@@ -76,7 +76,7 @@
     .road-title-strip { font-size: 2.2vw; font-weight: bold; color: #777; padding-left: 1vw; }
     .road-title-strip-gold { font-size: 2.2vw; font-weight: bold; color: #b8860b; padding-left: 1vw; border-top: 1px dashed #ccc; margin-top: 0.2vh; }
 
-    /* 路单格子全自适应 */
+    /* 路单格子自适应高度 */
     .bead-row-container, .bigroad-row-container { height: calc(50% - 1.5vh); display: flex; flex-direction: row; background: #fff; border-top: 1px solid #e0e0e0; border-left: 1px solid #e0e0e0; }
     .bead-column-unit, .bigroad-column-unit { display: flex; flex-direction: column; width: 5vw; height: 100%; }
     .bead-cell-unit, .bigroad-cell-unit { flex: 1; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: center; align-items: center; box-sizing: border-box; }
@@ -167,6 +167,7 @@
         <div class="card-slot card-rotated" :class="{'card-anim-rotated': playerCards[2]}"><span v-if="playerCards[2]" :style="{color: playerCards[2].isRed ? '#d90000' : '#000'}">{{playerCards[2].suit}}{{playerCards[2].rank}}</span></div>
       </div>
     </div>
+    
     <div class="cards-side">
       <div class="side-title banker-color">庄 BANKER [ {{bankerPoint}} 点 ]</div>
       <div class="card-slots">
@@ -188,6 +189,7 @@
             </div>
           </div>
         </div>
+
         <div class="road-title-strip-gold">正统大路走势</div>
         <div class="bigroad-row-container">
           <div class="bigroad-column-unit" v-for="(col, cIndex) in displayBigRoad" :key="'big-'+cIndex">
@@ -201,8 +203,12 @@
   </div>
 
   <div class="road-intelligence-mega-deck">
-    <div class="l6-marquee-banner-pro" v-if="l6EffectActive"><div class="marquee-glow-layer"><span class="marquee-text-pro">{{l6EffectText}}</span></div></div>
-    <div class="road-tips-box-pro" v-else><div class="tips-header-tag">AI分析</div><span class="tips-text-pro">{{roadTrendTip}}</span></div>
+    <div class="l6-marquee-banner-pro" v-if="l6EffectActive">
+      <div class="marquee-glow-layer"><span class="marquee-text-pro">{{l6EffectText}}</span></div>
+    </div>
+    <div class="road-tips-box-pro" v-else>
+      <div class="tips-header-tag">AI分析</div><span class="tips-text-pro">{{roadTrendTip}}</span>
+    </div>
   </div>
 
   <div class="custom-chip-control" v-if="showControl">
@@ -224,7 +230,7 @@
     </div>
 
     <div class="lucky6-premium-bar" v-if="gameMode === 'free'">
-      <div class="l6-zone" @click="placeBet('lucky6_any')"><span class="l6-t">幸运6(任意)</span><span class="l6-o">1:12或1:20</span><div class="cz-a" v-if="bets.lucky6_any > 0">¥{{bets.lucky6_any}}</div></div>
+      <div class="l6-zone" @click="placeBet('lucky6_any')"><span class="l6-t">幸运6(任意)</span><span class="l6-o">1:12 或 1:20</span><div class="cz-a" v-if="bets.lucky6_any > 0">¥{{bets.lucky6_any}}</div></div>
       <div class="l6-zone" @click="placeBet('lucky6_2cards')"><span class="l6-t">幸运6(2张)</span><span class="l6-o">1 : 22</span><div class="cz-a" v-if="bets.lucky6_2cards > 0">¥{{bets.lucky6_2cards}}</div></div>
       <div class="l6-zone" @click="placeBet('lucky6_3cards')"><span class="l6-t">幸运6(3张)</span><span class="l6-o">1 : 50</span><div class="cz-a" v-if="bets.lucky6_3cards > 0">¥{{bets.lucky6_3cards}}</div></div>
     </div>
@@ -245,7 +251,6 @@
       <button class="main-deal-button" @click="dealCards">开 始 发 牌</button>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -289,7 +294,7 @@ createApp({
       bets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 },
       lastBets: { banker: 0, tie: 0, player: 0, lucky6_any: 0, lucky6_2cards: 0, lucky6_3cards: 0 }, 
       gameCount: 1, rawHistory: [], displayBeadPlate: [], displayBigRoad: [],    
-      roadTrendTip: "大路积攒中，智能AI正在监控长龙单跳等路子...", 
+      roadTrendTip: "大路积攒中，智能AI正在监控热门路子...", 
       l6EffectActive: false, l6EffectText: "", stats: { banker: 0, player: 0, tie: 0 },
       shoe: [], playerCards: [], bankerCards: [], playerPoint: 0, bankerPoint: 0,
       isDealing: false, needResetShoeNextTurn: false, clickTimer: null
@@ -335,7 +340,7 @@ createApp({
       if (gap < 300) {
         clearTimeout(this.clickTimer); this.showControl = !this.showControl;
       } else {
-        this.clickTimer = setTimeout(() => { if (this.customChipValue <= 0) this.showToast('请【快速双击】设置自由筹码面额'); }, 300);
+        this.clickTimer = setTimeout(() => { if (this.customChipValue <= 0) this.showToast('请【快速双击】设置自由面额'); }, 300);
       }
     },
     placeBet(zone) {
@@ -355,7 +360,7 @@ createApp({
       const last = this.lastBets;
       let reqTotal = last.banker + last.tie + last.player;
       if (this.gameMode === 'free') reqTotal += (last.lucky6_any + last.lucky6_2cards + last.lucky6_3cards);
-      if (reqTotal === 0) { this.showToast('无上局下注记录'); return; }
+      if (reqTotal === 0) { this.showToast('无上局记录'); return; }
       let currentBalance = this.balance + this.totalBet;
       if (currentBalance < reqTotal) { this.showToast('余额不足'); return; }
       this.clearBets();
@@ -370,13 +375,13 @@ createApp({
       let reqAmt = targetBets.banker + targetBets.tie + targetBets.player + targetBets.lucky6_any + targetBets.lucky6_2cards + targetBets.lucky6_3cards;
       if (reqAmt === 0) { this.showToast('桌面无有效筹码'); return; }
       let currentBalance = this.balance + this.totalBet;
-      if (currentBalance < reqAmt * 2) { this.showToast('余额不足，无法加倍'); return; }
+      if (currentBalance < reqAmt * 2) { this.showToast('余额不足'); return; }
       this.bets = { banker: targetBets.banker * 2, tie: targetBets.tie * 2, player: targetBets.player * 2, lucky6_any: targetBets.lucky6_any * 2, lucky6_2cards: targetBets.lucky6_2cards * 2, lucky6_3cards: targetBets.lucky6_3cards * 2 };
       this.balance = currentBalance - (reqAmt * 2); this.totalBet = reqAmt * 2;
     },
     dealCards() {
       if (this.isDealing) return;
-      if (this.totalBet === 0) { this.showToast('请先选择对应区域下注'); return; }
+      if (this.totalBet === 0) { this.showToast('请先下注'); return; }
       if (this.needResetShoeNextTurn) {
         this.createShoe(); this.resetAllRoadMatrix(); this.rawHistory = []; this.gameCount = 1; this.stats = { banker: 0, player: 0, tie: 0 };
         this.needResetShoeNextTurn = false; this.l6EffectActive = false; this.roadTrendTip = "新牌靴重开，智能大奖监控开启！";
@@ -458,7 +463,7 @@ createApp({
       if (len < 3) return "热门盘口路单蓄势中...";
       let last = historyWithoutTies[len - 1]; let dragonCount = 0;
       for(let i = len - 1; i >= 0; i--) { if(historyWithoutTies[i] === last) dragonCount++; else break; }
-      if (dragonCount >= 4) return `【名路提示】长${last === 'banker' ? '庄' : '闲'}连开 ${dragonCount} 局！建议顺龙！`;
+      if (dragonCount >= 4) return `【名路提示】长${last === 'banker' ? '庄' : '闲'}连开 ${dragonCount} 局！顺龙而行！`;
       let jumpCount = 1;
       for (let i = len - 1; i > 0; i--) { if (historyWithoutTies[i] !== historyWithoutTies[i-1]) jumpCount++; else break; }
       if (jumpCount >= 4) return `【名路提示】热单跳！呈现 ${jumpCount} 手交替大路！`;
