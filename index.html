@@ -46,30 +46,42 @@
 
       /* 牌桌区：增加 flex-grow 权重，并设置最小高度 */
     .card-display-area {
-      flex: 3 1 auto; /* 核心权重提升 */
-      min-height: 140px; /* 强制最小高度，挤压时优先压缩路单 */
-      display: flex; justify-content: space-between;
-      margin: 1vh 2vw; padding: 1vh 2vw; background: rgba(0,0,0,0.5);
-      border: 1px solid #FFD700; border-radius: 1.6vw; align-items: center;
-    }
+  flex: 2.2;   /* 原来是1 → 现在变大 */
+  min-height: 18vh; /* 保底高度 */
+  margin: 1vh 2vw 0;
+  padding: 1vh 2vw;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #FFD700;
+  border-radius: 1.6vw;
+  align-items: center;
+}
 
     /* 路单面板区：去掉死高度，改用比例 */
-    .macau-roads-panel-clean {
-      flex: 0 1 18vh; /* 允许路单面板在极端情况下自动缩小 */
-      margin: 0 2vw; background: #ffffff; border: 1px solid #FFD700; border-radius: 1.6vw; padding: 1vw; overflow: hidden;
-    }
-    
-    /* 核心修改：将路单的高度限制从 px 改为相对百分比 */
-    .bead-row-container, .bigroad-row-container { 
-      height: 100%; display: flex; 
-    }
-    .bead-column-unit, .bigroad-column-unit { 
-      display: flex; flex-direction: column; width: 6vw; height: 100%; 
-    }
-    .bead-cell-unit, .bigroad-cell-unit { 
-      flex: 1; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: center; align-items: center; 
-    }
-
+   .macau-roads-panel-clean {
+  flex: 0.8;   /* 关键：缩小占比 */
+  max-height: 22vh; /* 限制最大高度 */
+  margin: 1vh 2vw 0;
+  background-color: #ffffff;
+  border: 1px solid #FFD700;
+  border-radius: 1.6vw;
+  padding: 1vw;
+  color: #333;
+  overflow: hidden;
+}
+    .roads-scroll-view {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden; /* 防止撑高 */
+  white-space: nowrap;
+}
+    .card-slot {
+  width: 12vw;   /* 原来10vw → 放大 */
+  height: 18vw;
+  max-height: 10vh;
+  max-width: 7vh;
+  font-size: 4.5vw;  /* 字体更大 */
+}
 
     /* AI情报智能分析舱屏 */
     .road-intelligence-mega-deck {
